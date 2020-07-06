@@ -15,6 +15,10 @@ public class History {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private int id;
 
+    @ManyToOne
+    @NotNull
+    private SecurityPaper security;
+
     @NotNull
     @Column(length = 12)
     private String boardId;
@@ -23,15 +27,6 @@ public class History {
     @NotNull
     private Calendar tradeDate;
 
-    @NotNull
-    @Column(length = 189)
-    private String shortName;
-
-    @NotNull
-    @Column(length = 36)
-    private String secId;
-
-    @NotNull
     private double
             numTrades,
             value,
