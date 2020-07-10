@@ -1,30 +1,37 @@
 package com.vlad.securities.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.Calendar;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "histories")
-public class History {
+public class HistoryEntity {
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne
     @NotNull
-    private SecurityPaper security;
+    @ManyToOne
+    @JoinColumn(name = "secId", referencedColumnName = "secId")
+    private SecuritiesEntity security;
 
     @NotNull
+    @NotEmpty
     @Column(length = 12)
     private String boardId;
 
-    @Temporal(TemporalType.DATE)
     @NotNull
+    @Temporal(TemporalType.DATE)
     private Calendar tradeDate;
 
     private double

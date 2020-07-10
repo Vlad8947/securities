@@ -1,43 +1,49 @@
 package com.vlad.securities.entity;
 
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import javax.validation.ValidationException;
+import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor()
 @Entity
 @Table(name = "securities")
-public class SecurityPaper {
+public class SecuritiesEntity implements Serializable {
+
+    private static final String NAME_REGEXP = "^[А-Яа-я0-9\\s]+$";
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private int id;
 
     @OneToMany(mappedBy = "security")
-    private List<History> histories;
+    private List<HistoryEntity> histories;
 
-    @NotNull
+    @NotBlank
     @Column(length = 36)
     private String secId;
 
-    @NotNull
+    @NotBlank
     @Column(length = 189)
     private String shortName;
+
+    @NotBlank
+    @Column(length = 765)
+    @Setter(AccessLevel.NONE)
+    private String name;
+
+    private int isTraded;
 
     @Column(length = 189)
     private String regNumber;
 
-    @NotNull
-    @Column(length = 765)
-    private String name;
-
     @Column(length = 765)
     private String isin;
-
-    @NotNull
-    private int isTraded;
 
     private int emitentId;
 
@@ -65,4 +71,14 @@ public class SecurityPaper {
     @Column(length = 12)
     private String marketPriceBoardId;
 
+    public void setName(String name) {
+        if (!java.util.regex.Pattern.matches(NAME_REGEXP, name)) {
+            throw new ValidationException("Parameter 'name' is incorrect for pattern " + NAME_REGEXP);
+        }
+        this.name = name;
+    }
+
+    public void setNameWithoutPattern(String name) {
+        this.name = name;
+    }
 }
