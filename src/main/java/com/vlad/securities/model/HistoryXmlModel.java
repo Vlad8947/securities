@@ -1,13 +1,8 @@
 package com.vlad.securities.model;
 
-import lombok.Data;
-
-import java.util.List;
-
-@Data
-public class HistoryXmlModel {
+import java.util.ArrayList;
 
 
-    private List<DataModel<String>> document;
+public class HistoryXmlModel extends ArrayList<DataModel<HistoryModel>> {
 
 }

@@ -1,8 +1,5 @@
 package com.vlad.securities.service;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.vlad.securities.entity.SecuritiesEntity;
 import com.vlad.securities.model.SecuritiesModel;
 import com.vlad.securities.model.SecuritiesXmlModel;
@@ -16,6 +13,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.vlad.securities.StaticResource.XML_MAPPER;
+
 @Service
 public class SecuritiesService {
 
@@ -23,13 +22,14 @@ public class SecuritiesService {
     private static final String fileStartsWith = "securities_";
     private static final String fileEndsWith = ".xml";
 
-    @Autowired
     private SecuritiesRepository securitiesRepository;
 
-    public void saveFromLocalFiles() throws IOException {
-        ObjectMapper objectMapper = new XmlMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    @Autowired
+    public SecuritiesService(SecuritiesRepository securitiesRepository) {
+        this.securitiesRepository = securitiesRepository;
+    }
 
+    public void saveFromLocalFiles() throws IOException {
         File dirFile = new File(localPath);
         if (!dirFile.isDirectory()) {
             throw new FileNotFoundException("Securities local path is not directory");
@@ -38,7 +38,7 @@ public class SecuritiesService {
             if (secXmlFile.isFile()) {
                 String secXmlFileName = secXmlFile.getName();
                 if (secXmlFileName.startsWith(fileStartsWith) && secXmlFileName.endsWith(fileEndsWith)) {
-                    SecuritiesXmlModel xmlModel = objectMapper.readValue(secXmlFile, SecuritiesXmlModel.class);
+                    SecuritiesXmlModel xmlModel = XML_MAPPER.readValue(secXmlFile, SecuritiesXmlModel.class);
                     saveXml(xmlModel);
                 }
             }
@@ -50,7 +50,11 @@ public class SecuritiesService {
     }
 
     private List<SecuritiesEntity> convert(List<SecuritiesModel> modelList) {
+        List<String> secIdList = modelList.stream().map(SecuritiesModel::getSecId).collect(Collectors.toList());
+        List<String> existSecIds = securitiesRepository.findAllBySecIdIn(secIdList).stream()
+                .map(SecuritiesEntity::getSecId).collect(Collectors.toList());
         return modelList.stream()
+                .filter(model -> !existSecIds.contains(model.getSecId()))
                 .map(this::convert)
                 .collect(Collectors.toList());
     }

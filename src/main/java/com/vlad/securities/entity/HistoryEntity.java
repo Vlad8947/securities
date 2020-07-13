@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.util.Calendar;
+import java.util.Date;
 
 @Data
 @AllArgsConstructor
@@ -32,9 +32,9 @@ public class HistoryEntity {
 
     @NotNull
     @Temporal(TemporalType.DATE)
-    private Calendar tradeDate;
+    private Date tradeDate;
 
-    private double
+    private Double
             numTrades,
             value,
             open,

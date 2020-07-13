@@ -1,23 +1,30 @@
 package com.vlad.securities.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.vlad.securities.StaticResource;
 import com.vlad.securities.entity.HistoryEntity;
 import com.vlad.securities.entity.SecuritiesEntity;
 import com.vlad.securities.model.DataModel;
 import com.vlad.securities.model.HistoryModel;
+import com.vlad.securities.model.HistoryXmlModel;
+import com.vlad.securities.model.ShortModel;
 import com.vlad.securities.repository.HistoryRepository;
 import com.vlad.securities.repository.SecuritiesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import javax.validation.ValidationException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.vlad.securities.StaticResource.XML_MAPPER;
 
 @Service
 public class HistoryService {
@@ -26,17 +33,31 @@ public class HistoryService {
     private static final String fileStartsWith = "history_";
     private static final String fileEndsWith = ".xml";
     private static final String dataId = "history";
-    private static final ObjectMapper objectMapper = new XmlMapper();
 
-    static {
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
-
-    @Autowired
     private HistoryRepository historyRepository;
-    @Autowired
     private SecuritiesRepository securitiesRepository;
 
+
+    @Autowired
+    public HistoryService(HistoryRepository historyRepository,
+                          SecuritiesRepository securitiesRepository) {
+        this.historyRepository = historyRepository;
+        this.securitiesRepository = securitiesRepository;
+    }
+
+
+    public List<ShortModel> findShort(String emitentTitle, Date beginDate, Date endDate, String sortCol) {
+
+        List<HistoryEntity> historyEntities;
+        if (ShortModel.securitiesCols.contains(sortCol)) {
+            historyEntities = historyRepository.shortInfoOrderBySecurities(emitentTitle, beginDate, endDate, Sort.by(sortCol));
+        } else if (ShortModel.historyCols.contains(sortCol)) {
+            historyEntities = historyRepository.shortInfoOrderByHistory(emitentTitle, beginDate, endDate, Sort.by(sortCol));
+        } else {
+            throw new ValidationException("Sort column doesn't exist");
+        }
+        return convertToShort(historyEntities);
+    }
 
     public void saveFromLocalFiles() throws IOException {
 
@@ -48,46 +69,44 @@ public class HistoryService {
             if (historyXmlFile.isFile()) {
                 String historyXmlFileName = historyXmlFile.getName();
                 if (historyXmlFileName.startsWith(fileStartsWith) && historyXmlFileName.endsWith(fileEndsWith)) {
-                    List<DataModel<HistoryModel>> dataList = objectMapper.readValue(
-                            historyXmlFile, new TypeReference<List<DataModel<HistoryModel>>>() {});
-//                    HistoryXmlModel xmlModel = objectMapper.readValue(
-//                            historyXmlFile, new TypeReference<List<DataModel<String>>>() {});
-                    saveXml(dataList);
+                    HistoryXmlModel xmlModel = XML_MAPPER.readValue(
+                            historyXmlFile, HistoryXmlModel.class);
+                    saveXml(xmlModel);
                 }
             }
         }
     }
 
-    public void saveXml(List<DataModel<HistoryModel>> dataModelList) {
-        DataModel<HistoryModel> dataModel = null;
-        for(DataModel<HistoryModel> tmpData: dataModelList) {
+    public void saveXml(HistoryXmlModel xmlModel) {
+        DataModel<HistoryModel> historyDataModel = null;
+        for(DataModel<HistoryModel> tmpData: xmlModel) {
             if (tmpData.getId().equals(dataId)) {
-                dataModel = tmpData;
+                historyDataModel = tmpData;
                 break;
             }
         }
-//        List<HistoryModel> historyList = dataModel.getRows().stream()
-//                .map(str -> {
-//                    try {
-//                        return objectMapper.readValue(str, HistoryModel.class);
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    return null;
-//                })
-//                .filter(Objects::nonNull)
-//                .collect(Collectors.toList());
+        historyRepository.saveAll(convert(historyDataModel.getRows()));
+    }
 
-        historyRepository.saveAll(convert(dataModel.getRows()));
+    private List<ShortModel> convertToShort(List<HistoryEntity> historyEntities) {
+        return historyEntities.stream().map(this::convertToShort).collect(Collectors.toList());
+    }
+
+    private ShortModel convertToShort(HistoryEntity history) {
+        SecuritiesEntity security = history.getSecurity();
+        DateFormat dateFormat = StaticResource.DATE_FORMAT;
+        return new ShortModel(
+                security.getSecId(), security.getRegNumber(),
+                security.getName(), security.getEmitentTitle(),
+                dateFormat.format(history.getTradeDate()), history.getNumTrades(),
+                history.getOpen(), history.getClose());
     }
 
     private List<HistoryEntity> convert(List<HistoryModel> modelList) {
         Set<String> secIds = modelList.stream().map(HistoryModel::getSecId).collect(Collectors.toSet());
-        Map<String, SecuritiesEntity> securitiesMap = new HashMap<>();
-        for (String secId: secIds) {
-            Optional<SecuritiesEntity> optional = securitiesRepository.findBySecId(secId);
-            optional.ifPresent(sec -> securitiesMap.put(secId, optional.get()));
-        }
+        Map<String, SecuritiesEntity> securitiesMap =
+                securitiesRepository.findAllBySecIdIn(secIds).stream()
+                .collect(Collectors.toMap(SecuritiesEntity::getSecId, securitiesEntity -> securitiesEntity));
 
         return modelList.stream()
                 .filter(hist -> securitiesMap.containsKey(hist.getSecId()))

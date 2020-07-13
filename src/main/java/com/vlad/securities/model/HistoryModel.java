@@ -3,7 +3,7 @@ package com.vlad.securities.model;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Data;
 
-import java.util.Calendar;
+import java.util.Date;
 
 @Data
 public class HistoryModel {
@@ -11,40 +11,40 @@ public class HistoryModel {
     @JacksonXmlProperty(localName = "BOARDID")
     private String boardId;
     @JacksonXmlProperty(localName = "TRADEDATE")
-    private Calendar tradeDate;
+    private Date tradeDate;
     @JacksonXmlProperty(localName = "SECID")
     private String secId;
     @JacksonXmlProperty(localName = "NUMTRADES")
-    private double numTrades;
+    private Double numTrades;
     @JacksonXmlProperty(localName = "VALUE")
-    private double value;
+    private Double value;
     @JacksonXmlProperty(localName = "OPEN")
-    private double open;
+    private Double open;
     @JacksonXmlProperty(localName = "LOW")
-    private double low;
+    private Double low;
     @JacksonXmlProperty(localName = "HIGH")
-    private double high;
+    private Double high;
     @JacksonXmlProperty(localName = "LEGALCLOSEPRICE")
-    private double legalClosePrice;
+    private Double legalClosePrice;
     @JacksonXmlProperty(localName = "WAPRICE")
-    private double waPrice;
+    private Double waPrice;
     @JacksonXmlProperty(localName = "CLOSE")
-    private double close;
+    private Double close;
     @JacksonXmlProperty(localName = "VOLUME")
-    private double volume;
+    private Double volume;
     @JacksonXmlProperty(localName = "MARKETPRICE2")
-    private double marketPrice2;
+    private Double marketPrice2;
     @JacksonXmlProperty(localName = "MARKETPRICE3")
-    private double marketPrice3;
+    private Double marketPrice3;
     @JacksonXmlProperty(localName = "ADMITTEDQUOTE")
-    private double admittedQuote;
+    private Double admittedQuote;
     @JacksonXmlProperty(localName = "MP2VALTRD")
-    private double mp2ValTrd;
+    private Double mp2ValTrd;
     @JacksonXmlProperty(localName = "MARKETPRICE3TRADESVALUE")
-    private double marketPrice3TradesValue;
+    private Double marketPrice3TradesValue;
     @JacksonXmlProperty(localName = "ADMITTEDVALUE")
-    private double admittedValue;
+    private Double admittedValue;
     @JacksonXmlProperty(localName = "WAVAL")
-    private double waVal;
+    private Double waVal;
 
 }

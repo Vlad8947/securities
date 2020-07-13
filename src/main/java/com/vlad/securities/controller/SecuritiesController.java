@@ -18,18 +18,17 @@ public class SecuritiesController {
     private SecuritiesService securitiesService;
 
     @PostMapping(path = "/add-from-xml",
-            consumes = MediaType.APPLICATION_XML_VALUE,
+            consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE},
             produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> addFromXML(@RequestBody SecuritiesXmlModel securitiesXml) {
         securitiesService.saveXml(securitiesXml);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @GetMapping("scan")
+    @GetMapping("/scan")
     public ResponseEntity<String> scan() throws IOException {
         securitiesService.saveFromLocalFiles();
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
-
 
 }

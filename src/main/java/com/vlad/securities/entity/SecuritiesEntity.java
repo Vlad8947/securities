@@ -37,7 +37,7 @@ public class SecuritiesEntity implements Serializable {
     @Setter(AccessLevel.NONE)
     private String name;
 
-    private int isTraded;
+    private Integer isTraded;
 
     @Column(length = 189)
     private String regNumber;
@@ -45,7 +45,7 @@ public class SecuritiesEntity implements Serializable {
     @Column(length = 765)
     private String isin;
 
-    private int emitentId;
+    private Integer emitentId;
 
     @Column(length = 765)
     private String emitentTitle;
